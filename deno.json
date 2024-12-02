@@ -5,5 +5,12 @@
     "imports": {
         "@util": "./util/util.ts",
         "@types/node": "npm:@types/node@^22.10.1"
+    },
+    "compilerOptions": {
+        "strict": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "noUncheckedIndexedAccess": true
     }
 }
