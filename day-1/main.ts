@@ -1,5 +1,7 @@
+import { getInput } from "@util";
+
 async function main() {
-    const data = await getInput();
+    const data = await getInput("day-1");
     // const result = calcTotalDistance(data);
     const result = calcSimilarityScore(data);
     console.log(result);
@@ -44,13 +46,4 @@ function getLists(data: string) {
     );
 }
 
-async function getInput() {
-    return await Deno.readTextFile(`${import.meta.dirname}/input.txt`);
-}
-
 main();
-
-function dbg<T>(val: T) {
-    console.log(val);
-    return val;
-}

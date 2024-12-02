@@ -1,0 +1,9 @@
+{
+    "tasks": {
+        "start": "cd $INIT_CWD && deno run --allow-read ./main.ts"
+    },
+    "imports": {
+        "@util": "./util/util.ts",
+        "@types/node": "npm:@types/node@^22.10.1"
+    }
+}
