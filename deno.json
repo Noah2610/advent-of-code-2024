@@ -4,8 +4,9 @@
         "run": "deno run --allow-read --allow-run bin/run.ts"
     },
     "imports": {
+        "@types/node": "npm:@types/node@^22.10.1",
         "@util": "./util/util.ts",
-        "@types/node": "npm:@types/node@^22.10.1"
+        "ts-expect": "npm:ts-expect@^1.3.0"
     },
     "compilerOptions": {
         "strict": true,

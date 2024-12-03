@@ -23,6 +23,23 @@ export function extractToken<T extends string>(
     };
 }
 
+export function extractFirst<T>(
+    input: string,
+    extractors: Extractor<T>[],
+): ExtractResult<T> {
+    for (const extractor of extractors) {
+        const result = extractor(input);
+        if (result.parsed) {
+            return result;
+        }
+    }
+
+    return {
+        parsed: null,
+        rest: input,
+    };
+}
+
 export function extractNumber(input: string): ExtractResult<number> {
     const DIGITS = new Set([..."0123456789"]);
 

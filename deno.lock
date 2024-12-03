@@ -2,7 +2,8 @@
   "version": "4",
   "specifiers": {
     "npm:@types/node@*": "22.5.4",
-    "npm:@types/node@^22.10.1": "22.10.1"
+    "npm:@types/node@^22.10.1": "22.10.1",
+    "npm:ts-expect@^1.3.0": "1.3.0"
   },
   "npm": {
     "@types/node@22.10.1": {
@@ -17,6 +18,9 @@
         "undici-types@6.19.8"
       ]
     },
+    "ts-expect@1.3.0": {
+      "integrity": "sha512-e4g0EJtAjk64xgnFPD6kTBUtpnMVzDrMb12N1YZV0VvSlhnVT3SGxiYTLdGy8Q5cYHOIC/FAHmZ10eGrAguicQ=="
+    },
     "undici-types@6.19.8": {
       "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
     },
@@ -26,7 +30,8 @@
   },
   "workspace": {
     "dependencies": [
-      "npm:@types/node@^22.10.1"
+      "npm:@types/node@^22.10.1",
+      "npm:ts-expect@^1.3.0"
     ]
   }
 }

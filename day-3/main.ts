@@ -1,15 +1,25 @@
+import { expectNever } from "ts-expect";
 import { getInput } from "@util";
 import {
     extractNumber,
+    extractFirst,
     extractToken,
     extractUntil,
     extractWhile,
     type ExtractResult,
 } from "./extractors.ts";
 
-type Instruction = {
-    a: number;
-    b: number;
+type Instruction =
+    | { type: "do" }
+    | { type: "dont" }
+    | {
+          type: "mul";
+          a: number;
+          b: number;
+      };
+
+type InstructionOfType<T extends Instruction["type"]> = Instruction & {
+    type: T;
 };
 
 async function main() {
@@ -21,9 +31,26 @@ async function main() {
     }
 
     let sum = 0;
+    let isEnabled = true;
+
     for (const instruction of instructions) {
-        const product = instruction.a * instruction.b;
-        sum += product;
+        if (instruction.type === "do") {
+            isEnabled = true;
+            continue;
+        }
+
+        if (instruction.type === "dont") {
+            isEnabled = false;
+            continue;
+        }
+
+        if (instruction.type === "mul") {
+            if (!isEnabled) continue;
+            sum += instruction.a * instruction.b;
+            continue;
+        }
+
+        expectNever(instruction);
     }
 
     console.log(sum);
@@ -37,6 +64,67 @@ function parseInstructions(input: string): Instruction[] | null {
 }
 
 function extractInstruction(input: string): ExtractResult<Instruction> {
+    return extractFirst<Instruction>(input, [
+        extractInstructionDo,
+        extractInstructionDont,
+        extractInstructionMul,
+    ]);
+}
+
+function extractInstructionDo(
+    input: string,
+): ExtractResult<InstructionOfType<"do">> {
+    const { parsed: parsedToken, rest: restToken } = extractToken(input, "do");
+    if (!parsedToken) {
+        return { parsed: null, rest: input };
+    }
+
+    const { parsed: parsedParens, rest: restParens } = extractToken(
+        restToken,
+        "()",
+    );
+    if (!parsedParens) {
+        return { parsed: null, rest: input };
+    }
+
+    return {
+        parsed: {
+            type: "do",
+        },
+        rest: restParens,
+    };
+}
+
+function extractInstructionDont(
+    input: string,
+): ExtractResult<InstructionOfType<"dont">> {
+    const { parsed: parsedToken, rest: restToken } = extractToken(
+        input,
+        "don't",
+    );
+    if (!parsedToken) {
+        return { parsed: null, rest: input };
+    }
+
+    const { parsed: parsedParens, rest: restParens } = extractToken(
+        restToken,
+        "()",
+    );
+    if (!parsedParens) {
+        return { parsed: null, rest: input };
+    }
+
+    return {
+        parsed: {
+            type: "dont",
+        },
+        rest: restParens,
+    };
+}
+
+function extractInstructionMul(
+    input: string,
+): ExtractResult<InstructionOfType<"mul">> {
     const { parsed: parsedToken, rest: restToken } = extractToken(input, "mul");
     if (!parsedToken) {
         return { parsed: null, rest: input };
@@ -72,6 +160,7 @@ function extractInstruction(input: string): ExtractResult<Instruction> {
 
     return {
         parsed: {
+            type: "mul",
             a: parsedA,
             b: parsedB,
         },
