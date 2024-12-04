@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::env;
 use std::fmt;
 use std::fs;
@@ -264,8 +265,13 @@ impl<'a> WordSearchIter<'a> {
     }
 }
 
+struct WordSearchIterItem {
+    pub word: String,
+    pub positions: Vec<(usize, usize)>,
+}
+
 impl<'a> Iterator for WordSearchIter<'a> {
-    type Item = String;
+    type Item = WordSearchIterItem;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_done {
@@ -273,12 +279,14 @@ impl<'a> Iterator for WordSearchIter<'a> {
         }
 
         let mut word = String::new();
+        let mut positions = Vec::new();
 
         let mut x = self.x;
         let mut y = self.y;
 
         while word.len() < self.word_len {
             word.push(self.grid[y][x]);
+            positions.push((x, y));
 
             if word.len() == self.word_len {
                 break;
@@ -291,6 +299,7 @@ impl<'a> Iterator for WordSearchIter<'a> {
                 y = next_pos.1;
             } else {
                 word.clear();
+                positions.clear();
 
                 let wrapped_pos = self.wrap();
                 if let Some(wrapped_pos) = wrapped_pos {
@@ -327,20 +336,16 @@ impl<'a> Iterator for WordSearchIter<'a> {
             }
         }
 
-        Some(word)
+        Some(WordSearchIterItem { word, positions })
     }
 }
 
 fn count_words(iter: WordSearchIter, word: &str) -> usize {
-    iter.map(|w| if w == word { 1 } else { 0 }).sum()
+    iter.map(|item| if item.word == word { 1 } else { 0 }).sum()
 }
 
-fn main() -> AppResult<()> {
-    let input = read_input()?;
-
-    let word_search = WordSearch::from(input);
-
-    let sum: usize = [
+fn sum_words(word_search: &WordSearch, word: &str) -> usize {
+    [
         Direction::Horizontal,
         Direction::HorizontalReverse,
         Direction::Vertical,
@@ -352,13 +357,60 @@ fn main() -> AppResult<()> {
     ]
     .into_iter()
     .map(|dir| {
-        let count = count_words(word_search.iter(4, dir), "XMAS");
+        let count = count_words(word_search.iter(word.len(), dir), word);
         println!("{:?}: {}", dir, count);
         count
     })
-    .sum();
+    .sum()
+}
 
-    println!("Sum: {}", sum);
+fn count_word_crosses(word_search: &WordSearch, word: &str) -> usize {
+    let mut center_position_counts = HashMap::<(usize, usize), usize>::new();
+
+    let center_idx = word.len() / 2;
+
+    [
+        Direction::DiagonalTLBR,
+        Direction::DiagonalTLBRReverse,
+        Direction::DiagonalBLTR,
+        Direction::DiagonalBLTRReverse,
+    ]
+    .into_iter()
+    .flat_map(|dir| {
+        word_search
+            .iter(word.len(), dir)
+            .filter(|item| item.word == word)
+    })
+    .for_each(|item| {
+        let center = item.positions.get(center_idx);
+        if let Some(pos) = center {
+            center_position_counts
+                .entry(*pos)
+                .and_modify(|count| *count += 1)
+                .or_insert(1);
+        }
+    });
+
+    center_position_counts
+        .into_values()
+        .filter(|value| *value > 1)
+        .count()
+}
+
+fn main() -> AppResult<()> {
+    let input = read_input()?;
+
+    let word_search = WordSearch::from(input);
+
+    {
+        let sum = sum_words(&word_search, "XMAS");
+        println!("Sum: {}", sum);
+    }
+
+    {
+        let sum = count_word_crosses(&word_search, "MAS");
+        println!("Crosses: {}", sum);
+    }
 
     Ok(())
 }
