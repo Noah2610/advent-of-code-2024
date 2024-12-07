@@ -27,6 +27,22 @@ impl From<io::Error> for AppError {
     }
 }
 
+impl From<String> for AppError {
+    fn from(error: String) -> Self {
+        AppError {
+            message: format!("[Error] {error}"),
+        }
+    }
+}
+
+impl<'a> From<&'a str> for AppError {
+    fn from(error: &'a str) -> Self {
+        AppError {
+            message: format!("[Error] {error}"),
+        }
+    }
+}
+
 pub fn read_input() -> io::Result<String> {
     let is_dev = env::var("DEV").is_ok();
     let file_name = if is_dev { "dev-input.txt" } else { "input.txt" };
@@ -34,7 +50,9 @@ pub fn read_input() -> io::Result<String> {
     let project_dir = get_project_dir()?;
     let input_file = project_dir.join(file_name);
 
-    fs::read_to_string(input_file)
+    fs::read_to_string(input_file).map_err(|e| {
+        io::Error::new(io::ErrorKind::NotFound, format!("{e}, {file_name}"))
+    })
 }
 
 // https://github.com/neilwashere/rust-project-root/blob/main/src/lib.rs
@@ -49,7 +67,6 @@ fn get_project_dir() -> io::Result<PathBuf> {
     let mut path_ancestors = path.ancestors();
 
     while let Some(parent) = path_ancestors.next() {
-        dbg!(parent);
         let has_cargo = fs::read_dir(parent)?.into_iter().any(|entry_res| {
             entry_res
                 .map(|entry| {
