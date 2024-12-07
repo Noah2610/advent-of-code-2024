@@ -5,7 +5,7 @@
     },
     "imports": {
         "@types/node": "npm:@types/node@^22.10.1",
-        "@util": "./util/util.ts",
+        "@util": "./util/ts/util.ts",
         "ts-expect": "npm:ts-expect@^1.3.0"
     },
     "compilerOptions": {

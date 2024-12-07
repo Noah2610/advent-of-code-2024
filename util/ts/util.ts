@@ -10,7 +10,9 @@ export async function getInput(
     const inputFile = dev ? "dev-input.txt" : "input.txt";
 
     return await Deno.readTextFile(
-        [dirname(import.meta.dirname ?? "."), day, inputFile].join("/"),
+        [dirname(dirname(import.meta.dirname ?? ".")), day, inputFile].join(
+            "/",
+        ),
     );
 }
 
