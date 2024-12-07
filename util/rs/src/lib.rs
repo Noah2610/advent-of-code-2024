@@ -1,7 +1,31 @@
 use std::env;
+use std::fmt;
 use std::fs;
 use std::io;
 use std::path::PathBuf;
+
+pub type AppResult<T = ()> = Result<T, AppError>;
+
+#[derive(Debug)]
+pub struct AppError {
+    message: String,
+}
+
+impl std::error::Error for AppError {}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl From<io::Error> for AppError {
+    fn from(error: io::Error) -> Self {
+        AppError {
+            message: format!("[IO Error] {error}"),
+        }
+    }
+}
 
 pub fn read_input() -> io::Result<String> {
     let is_dev = env::var("DEV").is_ok();

@@ -1,30 +1,5 @@
 use std::collections::HashMap;
-use std::fmt;
-use std::io;
-use util::read_input;
-
-type AppResult<T> = Result<T, AppError>;
-
-#[derive(Debug)]
-struct AppError {
-    message: String,
-}
-
-impl std::error::Error for AppError {}
-
-impl fmt::Display for AppError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl From<io::Error> for AppError {
-    fn from(error: io::Error) -> Self {
-        AppError {
-            message: format!("[IO Error] {error}"),
-        }
-    }
-}
+use util::{read_input, AppResult};
 
 type Grid = Vec<Vec<char>>;
 
@@ -395,7 +370,7 @@ fn count_word_crosses(word_search: &WordSearch, word: &str) -> usize {
         .count()
 }
 
-fn main() -> AppResult<()> {
+fn main() -> AppResult {
     let input = read_input()?;
 
     let word_search = WordSearch::from(input);
