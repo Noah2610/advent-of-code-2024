@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use util::{read_input, AppResult};
 
 type Page = u32;
@@ -26,6 +26,40 @@ impl PageOrderingRule {
     }
 }
 
+impl UpdateManuals {
+    pub fn split_correct_incorrect(
+        self,
+        rules: &PageOrderingRules,
+    ) -> (Self, Self) {
+        let (correct, incorrect) = self.0.into_iter().fold(
+            (Vec::new(), Vec::new()),
+            |(mut correct, mut incorrect), man| {
+                if man.is_correct_order(&rules) {
+                    correct.push(man)
+                } else {
+                    incorrect.push(man)
+                }
+                (correct, incorrect)
+            },
+        );
+
+        (correct.into(), incorrect.into())
+    }
+
+    pub fn sum_middle_pages(&self) -> Page {
+        self.0.iter().map(UpdateManual::get_middle_page).sum()
+    }
+
+    pub fn into_corrected(self, rules: &PageOrderingRules) -> Self {
+        Self(
+            self.0
+                .into_iter()
+                .map(|man| man.into_corrected(rules))
+                .collect(),
+        )
+    }
+}
+
 impl UpdateManual {
     pub fn is_correct_order(&self, rules: &PageOrderingRules) -> bool {
         for (i, page_a) in self.0.iter().enumerate() {
@@ -37,6 +71,52 @@ impl UpdateManual {
         }
 
         true
+    }
+
+    pub fn get_middle_page(&self) -> Page {
+        let len = self.0.len();
+        let mid = len / 2;
+        *self
+            .0
+            .get(mid)
+            .expect(&format!("Expected middle page: {:?}", &self.0))
+    }
+
+    pub fn into_corrected(self, rules: &PageOrderingRules) -> Self {
+        if self.is_correct_order(rules) {
+            return self;
+        }
+
+        let mut pages = self.0;
+        let len = pages.len();
+
+        let mut is_done = false;
+
+        'outer: while !is_done {
+            let mut i = 0;
+            while i < len {
+                let a = pages[i];
+
+                let mut j = i + 1;
+                while j < len {
+                    let b = pages[j];
+
+                    if !rules.is_correct_order(a, b) {
+                        pages.remove(j);
+                        pages.insert(i, b);
+                        continue 'outer;
+                    }
+
+                    j += 1;
+                }
+
+                i += 1;
+            }
+
+            is_done = true;
+        }
+
+        Self(pages)
     }
 }
 
@@ -131,6 +211,12 @@ impl<'a> TryFrom<&'a str> for UpdateManuals {
     }
 }
 
+impl From<Vec<UpdateManual>> for UpdateManuals {
+    fn from(manuals: Vec<UpdateManual>) -> Self {
+        Self(manuals)
+    }
+}
+
 fn main() -> AppResult {
     let input = read_input()?;
     let input_sections = input.split("\n\n").collect::<Vec<&str>>();
@@ -144,20 +230,20 @@ fn main() -> AppResult {
     let ordering_rules = PageOrderingRules::try_from(ordering_section)?;
     let update_manuals = UpdateManuals::try_from(manuals_section)?;
 
-    let sum_correct_manuals_middle = update_manuals
-        .0
-        .iter()
-        .filter(|man| man.is_correct_order(&ordering_rules))
-        .map(|man| {
-            let len = man.0.len();
-            let mid = len / 2;
-            man.0
-                .get(mid)
-                .ok_or(format!("Expected middle page: {:?}", &man.0))
-        })
-        .sum::<Result<Page, String>>()?;
+    let (correct_manuals, incorrect_manuals) =
+        update_manuals.split_correct_incorrect(&ordering_rules);
 
-    println!("Sum of correctly ordered manuals' middle pages: {sum_correct_manuals_middle}");
+    let sum_correct_manuals_middle = correct_manuals.sum_middle_pages();
+    let corrected_incorrect_manuals =
+        incorrect_manuals.into_corrected(&ordering_rules);
+    let sum_corrected_incorrect_manuals_middle =
+        corrected_incorrect_manuals.sum_middle_pages();
+
+    println!(
+        "Sum of correctly ordered manuals' middle pages:\n  {}",
+        sum_correct_manuals_middle
+    );
+    println!("Sum of inccorectly ordered manuals' middle pages after correcting order:\n  {}", sum_corrected_incorrect_manuals_middle);
 
     Ok(())
 }
